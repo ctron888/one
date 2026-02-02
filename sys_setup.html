@@ -10,48 +10,62 @@
     <div class="max-w-md mx-auto bg-white p-6 rounded shadow">
         <h1 class="text-xl font-bold mb-4 text-red-600">系統初始化 / 救援</h1>
         
-        <div class="space-y-4">
+        <div class="space-y-6">
+            <!-- 設定金鑰 -->
+            <div class="p-4 border rounded bg-blue-50">
+                <label class="block text-sm font-bold mb-1">1. 驗證身分</label>
+                <input type="password" id="adminKey" placeholder="輸入 SYS_ADMIN_KEY" class="w-full border p-2 rounded">
+            </div>
+
+            <!-- 建立區 -->
             <div class="p-4 border rounded bg-yellow-50">
-                <p class="text-sm text-gray-600 mb-2">建立首位老師帳號：</p>
-                <input type="text" id="adminKey" placeholder="輸入 SYS_ADMIN_KEY" class="w-full border p-2 mb-2 rounded">
-                <hr class="my-2">
-                <input type="text" id="t_user" placeholder="老師帳號 (英數)" class="w-full border p-2 mb-2 rounded">
-                <input type="password" id="t_pass" placeholder="老師初始密碼" class="w-full border p-2 mb-2 rounded">
-                <button onclick="setupTeacher()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">建立老師</button>
+                <label class="block text-sm font-bold mb-2">2. 建立首位老師</label>
+                <input type="text" id="t_user" placeholder="老師帳號" class="w-full border p-2 mb-2 rounded">
+                <input type="password" id="t_pass" placeholder="初始密碼" class="w-full border p-2 mb-2 rounded">
+                <button onclick="execute('setup-teacher')" class="w-full bg-blue-600 text-white p-2 rounded">建立帳號</button>
+            </div>
+
+            <!-- 重設區 -->
+            <div class="p-4 border rounded bg-red-50">
+                <label class="block text-sm font-bold mb-2">3. 強制重設老師密碼</label>
+                <input type="text" id="reset_user" placeholder="要重設的帳號" class="w-full border p-2 mb-2 rounded">
+                <input type="password" id="reset_pass" placeholder="新密碼" class="w-full border p-2 mb-2 rounded">
+                <button onclick="execute('reset-teacher-password')" class="w-full bg-red-600 text-white p-2 rounded">強制更新密碼</button>
             </div>
         </div>
         <p id="msg" class="mt-4 text-sm font-bold text-center"></p>
     </div>
 
     <script>
-        async function setupTeacher() {
+        async function execute(action) {
             const adminKey = document.getElementById('adminKey').value;
-            const username = document.getElementById('t_user').value;
-            const password = document.getElementById('t_pass').value;
             const msg = document.getElementById('msg');
-
             msg.innerText = "處理中...";
+
+            let bodyData = {};
+            if (action === 'setup-teacher') {
+                bodyData = { 
+                    username: document.getElementById('t_user').value, 
+                    password: document.getElementById('t_pass').value 
+                };
+            } else {
+                bodyData = { 
+                    username: document.getElementById('reset_user').value, 
+                    newPassword: document.getElementById('reset_pass').value 
+                };
+            }
             
             try {
-                const res = await fetch('/api/admin/setup-teacher', {
+                const res = await fetch(`/api/admin/${action}`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'x-admin-key': adminKey 
-                    },
-                    body: JSON.stringify({ username, password })
+                    headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                    body: JSON.stringify(bodyData)
                 });
-                
                 const data = await res.json();
-                if (data.success) {
-                    msg.className = "mt-4 text-sm font-bold text-center text-green-600";
-                    msg.innerText = "建立成功！現在你可以用這個帳號登入老師端了。";
-                } else {
-                    msg.className = "mt-4 text-sm font-bold text-center text-red-600";
-                    msg.innerText = "錯誤：" + data.error;
-                }
+                msg.innerText = data.success ? "執行成功！" : "失敗：" + data.error;
+                msg.className = data.success ? "mt-4 text-sm font-bold text-center text-green-600" : "mt-4 text-sm font-bold text-center text-red-600";
             } catch (e) {
-                msg.innerText = "連線失敗，請檢查 Vercel 設定或 Worker 網址。";
+                msg.innerText = "連線失敗。";
             }
         }
     </script>
