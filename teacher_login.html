@@ -4,93 +4,171 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>老師登入 - 學生問答系統</title>
+    <!-- Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 針對長者優化的基礎設定 */
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .input-large { font-size: 1.125rem; padding: 0.75rem 1rem; }
+        .btn-large { font-size: 1.25rem; padding: 1rem; }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-slate-800">老師管理後台</h1>
-            <p class="text-slate-500 mt-2">請輸入帳號密碼以管理課程</p>
+    <!-- 主卡片容器 -->
+    <div class="max-w-md w-full bg-white rounded-xl shadow-xl overflow-hidden">
+        
+        <!-- 標題區 (深色背景強調) -->
+        <div class="bg-slate-800 p-6 text-center">
+            <h1 class="text-2xl font-bold text-white tracking-wide">👨‍🏫 老師管理後台</h1>
+            <p class="text-slate-300 mt-2 text-sm">請輸入帳號密碼以管理課程</p>
         </div>
 
-        <form id="loginForm" class="space-y-6">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">帳號 (Username)</label>
-                <input type="text" id="username" required
-                    class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="例如: admin">
+        <div class="p-8">
+            <form id="loginForm" class="space-y-6">
+                
+                <!-- 帳號欄位 -->
+                <div>
+                    <label class="block text-slate-700 font-bold mb-2 text-lg">
+                        帳號 (Username)
+                    </label>
+                    <input type="text" id="username" required
+                        class="w-full border-2 border-slate-300 rounded-lg input-large focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors"
+                        placeholder="請輸入您的帳號"
+                        autocomplete="username">
+                </div>
+
+                <!-- 密碼欄位 -->
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-slate-700 font-bold text-lg">
+                            密碼 (Password)
+                        </label>
+                    </div>
+                    <input type="password" id="password" required
+                        class="w-full border-2 border-slate-300 rounded-lg input-large focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition-colors"
+                        placeholder="請輸入您的密碼"
+                        autocomplete="current-password">
+                </div>
+
+                <!-- 錯誤訊息區域 (預設隱藏) -->
+                <div id="errorMsg" class="hidden bg-red-50 border-l-4 border-red-500 p-4 rounded text-red-700">
+                    <p class="font-bold">登入失敗</p>
+                    <p id="errorText" class="text-sm">帳號或密碼錯誤</p>
+                </div>
+
+                <!-- 登入按鈕 (加大) -->
+                <button type="submit" id="loginBtn"
+                    class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-lg btn-large shadow-md transition-transform active:scale-95 flex justify-center items-center gap-2">
+                    <span>立即登入</span>
+                </button>
+
+            </form>
+
+            <!-- 底部連結區 -->
+            <div class="mt-8 pt-6 border-t border-slate-100 space-y-4 text-center">
+                <!-- 忘記密碼 -->
+                <div>
+                    <button onclick="toggleForgotPassword()" class="text-slate-500 hover:text-blue-700 font-medium underline text-base">
+                        忘記密碼？(使用安全問題重設)
+                    </button>
+                </div>
+                
+                <!-- 系統救援入口提示 (僅供老師參考) -->
+                <div class="text-xs text-slate-400">
+                    若是首次使用或完全無法登入，<br>請使用 <a href="sys_setup.html" class="underline hover:text-slate-600">系統救援 (sys_setup)</a> 進行初始化。
+                </div>
             </div>
+        </div>
+    </div>
 
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">密碼 (Password)</label>
-                <input type="password" id="password" required
-                    class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="請輸入您的密碼">
-            </div>
-
-            <div id="errorMsg" class="text-red-500 text-sm hidden"></div>
-
-            <button type="submit" id="loginBtn"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">
-                立即登入
+    <!-- 忘記密碼模態視窗 (簡單版) -->
+    <div id="forgotModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full">
+            <h3 class="text-xl font-bold text-slate-800 mb-4">重設密碼說明</h3>
+            <p class="text-slate-600 mb-4 leading-relaxed">
+                若您忘記密碼，請依照以下方式處理：
+            </p>
+            <ul class="list-disc list-inside text-slate-600 mb-6 space-y-2">
+                <li>使用 <strong>sys_setup.html</strong> 進行強制重設 (需 Admin Key)。</li>
+                <li>若已設定安全問題，請聯絡管理員協助。</li>
+            </ul>
+            <button onclick="toggleForgotPassword()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold py-3 rounded-lg">
+                關閉視窗
             </button>
-        </form>
-
-        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-            <a href="index.html" class="text-sm text-blue-500 hover:underline">← 回到學生入口</a>
         </div>
     </div>
 
     <script>
+        // DOM 元素選取
         const loginForm = document.getElementById('loginForm');
-        const errorMsg = document.getElementById('errorMsg');
         const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const errorText = document.getElementById('errorText');
+        const forgotModal = document.getElementById('forgotModal');
 
+        // 切換忘記密碼視窗
+        function toggleForgotPassword() {
+            forgotModal.classList.toggle('hidden');
+        }
+
+        // 登入邏輯
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // 重置狀態
-            errorMsg.classList.add('hidden');
-            loginBtn.disabled = true;
-            loginBtn.innerText = '驗證中...';
 
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            // 1. 鎖定按鈕避免重複提交
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                驗證中...
+            `;
+            errorMsg.classList.add('hidden');
+
+            // 2. 取得輸入值並去除前後空白 (符合規格 6.B.2.3 輸入檢查)
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value; // 密碼通常不 trim，但在本系統 Worker 會處理
 
             try {
-                // 呼叫 Worker API (根據 vercel.json 的 rewrite，/api 會導向 Worker)
-                const response = await fetch('/api/login', {
+                // 3. 發送 API 請求 (符合規格 1.4.3 相對路徑)
+                // 這裡一定要帶上 role: 'teacher'，讓 Worker 知道要去查 teachers 表
+                const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ 
+                        username: username, 
+                        password: password,
+                        role: 'teacher' 
+                    })
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    // 登入成功，跳轉至老師後台
-                    // 注意：Worker 會自動透過 Set-Cookie 寫入 session_token
-                    window.location.href = 'teacher_dashboard.html';
+                    // 4. 登入成功
+                    // Worker 已設定 HttpOnly Cookie，前端直接跳轉
+                    // 依據規格：老師登入後跳轉至 teacher.html
+                    window.location.href = 'teacher.html';
                 } else {
-                    // 顯示錯誤訊息 (例如：密碼錯誤)
-                    errorMsg.innerText = result.error || '登入失敗，請檢查帳號密碼';
-                    errorMsg.classList.remove('hidden');
+                    // 5. 顯示錯誤 (符合規格 4.4 錯誤攔截顯示)
+                    throw new Error(result.error || '帳號或密碼錯誤');
                 }
+
             } catch (err) {
-                errorMsg.innerText = '連線伺服器失敗，請稍後再試';
+                // 6. 錯誤處理 UI
+                errorText.textContent = err.message;
                 errorMsg.classList.remove('hidden');
-            } finally {
+                
+                // 若是密碼錯誤，清空密碼欄位以利重打
+                document.getElementById('password').value = '';
+                
+                // 恢復按鈕狀態
                 loginBtn.disabled = false;
-                loginBtn.innerText = '立即登入';
+                loginBtn.innerHTML = '<span>立即登入</span>';
             }
         });
-
-        // 檢查 URL 參數，如果有從 sys_setup 過來的訊息可以顯示
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('registered')) {
-            alert('管理員帳號已初始化，請登入');
-        }
     </script>
 </body>
 </html>
