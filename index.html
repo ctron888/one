@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>學生登入 - 問答系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 防止 iOS 雙擊縮放，優化觸控體驗 */
+        button, input { touch-action: manipulation; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: bold; }
+        .tab-inactive { color: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- 主卡片 -->
+    <div class="bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden">
+        
+        <!-- 頂部切換頁籤 -->
+        <div class="flex border-b">
+            <button onclick="switchTab('login')" id="tab-login" class="flex-1 py-4 text-center tab-active transition-all">
+                學生登入
+            </button>
+            <button onclick="switchTab('register')" id="tab-register" class="flex-1 py-4 text-center tab-inactive transition-all">
+                註冊帳號
+            </button>
+        </div>
+
+        <!-- 內容區域 -->
+        <div class="p-6">
+            
+            <!-- 錯誤訊息提示框 -->
+            <div id="error-box" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-4 text-sm font-bold"></div>
+
+            <!-- 1. 登入表單 -->
+            <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-1">帳號</label>
+                    <input type="text" name="username" required placeholder="請輸入帳號" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-lg">
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-1">密碼</label>
+                    <input type="password" name="password" required placeholder="請輸入密碼" 
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-lg">
+                </div>
+                <button type="submit" id="btn-login" class="w-full bg-blue-600 text-white py-3 rounded-lg text-lg font-bold shadow hover:bg-blue-700 transition">
+                    登入系統
+                </button>
+            </form>
+
+            <!-- 2. 註冊表單 (預設隱藏) -->
+            <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4 hidden">
+                <div class="bg-blue-50 p-3 rounded text-sm text-blue-800 mb-2">
+                    📢 請輸入老師提供的「班級邀請碼」才能註冊。
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-1">班級邀請碼</label>
+                    <input type="text" name="invite_code" required placeholder="例如：ABCD" 
+                           class="w-full p-3 border-2 border-blue-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-lg uppercase">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-1">帳號</label>
+                        <input type="text" name="username" required placeholder="英數帳號" 
+                               class="w-full p-3 border border-gray-300 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 font-bold mb-1">綽號</label>
+                        <input type="text" name="nickname" required placeholder="顯示名稱" 
+                               class="w-full p-3 border border-gray-300 rounded-lg outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 font-bold mb-1">密碼</label>
+                    <input type="password" name="password" required placeholder="設定密碼" 
+                           class="w-full p-3 border border-gray-300 rounded-lg outline-none">
+                </div>
+                
+                <!-- 安全問題 (找回密碼用) -->
+                <div class="border-t pt-3 mt-2">
+                    <p class="text-xs text-gray-500 mb-2">安全問題 (忘記密碼時使用)</p>
+                    <input type="text" name="security_question" required placeholder="問題 (例: 爸爸名字?)" 
+                           class="w-full p-2 border border-gray-300 rounded mb-2 text-sm">
+                    <input type="text" name="security_answer" required placeholder="答案" 
+                           class="w-full p-2 border border-gray-300 rounded text-sm">
+                </div>
+
+                <button type="submit" id="btn-register" class="w-full bg-green-600 text-white py-3 rounded-lg text-lg font-bold shadow hover:bg-green-700 transition">
+                    確認註冊
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript 邏輯 -->
+    <script>
+        // 切換 登入/註冊 頁籤
+        function switchTab(tab) {
+            document.getElementById('error-box').classList.add('hidden'); // 清除錯誤訊息
+            
+            if (tab === 'login') {
+                document.getElementById('form-login').classList.remove('hidden');
+                document.getElementById('form-register').classList.add('hidden');
+                document.getElementById('tab-login').className = "flex-1 py-4 text-center tab-active transition-all cursor-default";
+                document.getElementById('tab-register').className = "flex-1 py-4 text-center tab-inactive transition-all cursor-pointer bg-gray-50";
+            } else {
+                document.getElementById('form-login').classList.add('hidden');
+                document.getElementById('form-register').classList.remove('hidden');
+                document.getElementById('tab-login').className = "flex-1 py-4 text-center tab-inactive transition-all cursor-pointer bg-gray-50";
+                document.getElementById('tab-register').className = "flex-1 py-4 text-center tab-active transition-all cursor-default";
+            }
+        }
+
+        // 顯示錯誤訊息
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            box.innerText = msg;
+            box.classList.remove('hidden');
+        }
+
+        // 處理登入
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-login');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "驗證中...";
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            data.role = "student"; // 強制指定身分
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    // 登入成功，跳轉至學生主頁
+                    window.location.href = '/student.html';
+                } else {
+                    showError(result.error || "登入失敗");
+                }
+            } catch (err) {
+                showError("連線錯誤，請稍後再試");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        // 處理註冊
+        async function handleRegister(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-register');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "註冊中...";
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                // 注意：這裡呼叫的是 student-register API
+                const res = await fetch('/api/auth/student-register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+
+                if (result.success) {
+                    alert("註冊成功！請直接登入。");
+                    switchTab('login'); // 自動切換回登入頁
+                } else {
+                    showError(result.error || "註冊失敗");
+                }
+            } catch (err) {
+                showError("連線錯誤，請稍後再試");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+    </script>
+</body>
+</html>
