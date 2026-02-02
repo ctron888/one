@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老師登入 - 學生問答系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-slate-800">老師管理後台</h1>
+            <p class="text-slate-500 mt-2">請輸入帳號密碼以管理課程</p>
+        </div>
+
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">帳號 (Username)</label>
+                <input type="text" id="username" required
+                    class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="例如: admin">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">密碼 (Password)</label>
+                <input type="password" id="password" required
+                    class="w-full px-4 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="請輸入您的密碼">
+            </div>
+
+            <div id="errorMsg" class="text-red-500 text-sm hidden"></div>
+
+            <button type="submit" id="loginBtn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-200">
+                立即登入
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+            <a href="index.html" class="text-sm text-blue-500 hover:underline">← 回到學生入口</a>
+        </div>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMsg');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // 重置狀態
+            errorMsg.classList.add('hidden');
+            loginBtn.disabled = true;
+            loginBtn.innerText = '驗證中...';
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // 呼叫 Worker API (根據 vercel.json 的 rewrite，/api 會導向 Worker)
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // 登入成功，跳轉至老師後台
+                    // 注意：Worker 會自動透過 Set-Cookie 寫入 session_token
+                    window.location.href = 'teacher_dashboard.html';
+                } else {
+                    // 顯示錯誤訊息 (例如：密碼錯誤)
+                    errorMsg.innerText = result.error || '登入失敗，請檢查帳號密碼';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorMsg.innerText = '連線伺服器失敗，請稍後再試';
+                errorMsg.classList.remove('hidden');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerText = '立即登入';
+            }
+        });
+
+        // 檢查 URL 參數，如果有從 sys_setup 過來的訊息可以顯示
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('registered')) {
+            alert('管理員帳號已初始化，請登入');
+        }
+    </script>
+</body>
+</html>
