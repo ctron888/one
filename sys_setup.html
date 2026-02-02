@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統初始化 - 管理員專用</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white p-6 rounded shadow">
+        <h1 class="text-xl font-bold mb-4 text-red-600">系統初始化 / 救援</h1>
+        
+        <div class="space-y-4">
+            <div class="p-4 border rounded bg-yellow-50">
+                <p class="text-sm text-gray-600 mb-2">建立首位老師帳號：</p>
+                <input type="text" id="adminKey" placeholder="輸入 SYS_ADMIN_KEY" class="w-full border p-2 mb-2 rounded">
+                <hr class="my-2">
+                <input type="text" id="t_user" placeholder="老師帳號 (英數)" class="w-full border p-2 mb-2 rounded">
+                <input type="password" id="t_pass" placeholder="老師初始密碼" class="w-full border p-2 mb-2 rounded">
+                <button onclick="setupTeacher()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">建立老師</button>
+            </div>
+        </div>
+        <p id="msg" class="mt-4 text-sm font-bold text-center"></p>
+    </div>
+
+    <script>
+        async function setupTeacher() {
+            const adminKey = document.getElementById('adminKey').value;
+            const username = document.getElementById('t_user').value;
+            const password = document.getElementById('t_pass').value;
+            const msg = document.getElementById('msg');
+
+            msg.innerText = "處理中...";
+            
+            try {
+                const res = await fetch('/api/admin/setup-teacher', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-admin-key': adminKey 
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    msg.className = "mt-4 text-sm font-bold text-center text-green-600";
+                    msg.innerText = "建立成功！現在你可以用這個帳號登入老師端了。";
+                } else {
+                    msg.className = "mt-4 text-sm font-bold text-center text-red-600";
+                    msg.innerText = "錯誤：" + data.error;
+                }
+            } catch (e) {
+                msg.innerText = "連線失敗，請檢查 Vercel 設定或 Worker 網址。";
+            }
+        }
+    </script>
+</body>
+</html>
