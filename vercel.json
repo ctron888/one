@@ -1,4 +1,5 @@
 {
+  "$comment": "⚠️ 若未來複製到新班級，請改成該班級自己的 Cloudflare Worker 網址。",
   "rewrites": [
     {
       "source": "/api/(.*)",
